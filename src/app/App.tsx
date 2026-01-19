@@ -1,13 +1,20 @@
 import { useState } from "react";
 import {
-  faHouse,
+  faHome,
   faUserGraduate,
-  faClipboardUser,
-  faCalendarDays,
-  faGear,
-  faRightFromBracket,
+  faChalkboardTeacher,
+  faUsers,
+  faSitemap,
+  faDatabase,
+  faCog,
+  faBars,
+  faSignOutAlt,
+  faBrain,
   faSync,
   faBell,
+  faChevronRight,
+  faChevronLeft,
+  faSchool,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Dashboard } from "@/app/components/Dashboard";
@@ -41,10 +48,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/app/components/ui/breadcrumb";
-import { ThemeToggle } from "@/app/components/ui/theme-toggle";
-import { CommandPalette } from "@/app/components/ui/command-palette";
 
-type Screen = "dashboard" | "students" | "attendance" | "schedule" | "settings";
+
+type Screen = "dashboard" | "students" | "attendance" | "schedule" | "settings" | "teachers" | "staff" | "academicRelations" | "database" | "manualImport";
 
 function AppSidebar({
   currentScreen,
@@ -59,69 +65,157 @@ function AppSidebar({
 }) {
   const { state } = useSidebar();
 
-  const menuItems = [
-    { id: "dashboard" as Screen, label: "لوحة التحكم", icon: faHouse },
-    { id: "students" as Screen, label: "الطلاب", icon: faUserGraduate },
-    { id: "attendance" as Screen, label: "الحضور", icon: faClipboardUser },
-    { id: "schedule" as Screen, label: "الجدول", icon: faCalendarDays },
-    { id: "settings" as Screen, label: "الإعدادات", icon: faGear },
+  // Menu Items Definition
+  const items = [
+    { title: "لوحة التحكم", url: "#", icon: faHome, component: "dashboard" as Screen },
+    { title: "سجلات المعلمين", url: "#", icon: faChalkboardTeacher, component: "teachers" as Screen },
+    { title: "الطلاب", url: "#", icon: faUserGraduate, component: "students" as Screen },
+    { title: "موظفو المدرسة", url: "#", icon: faUsers, component: "staff" as Screen },
+    { title: "العلاقات التدريسية", url: "#", icon: faSitemap, component: "academicRelations" as Screen },
+    { title: "قاعدة البيانات", url: "#", icon: faDatabase, component: "database" as Screen },
+    { title: "الإعدادات", url: "#", icon: faCog, component: "settings" as Screen },
   ];
 
   return (
-    <Sidebar collapsible="icon" side="right" variant="sidebar" className="glass-panel border-l-0 ml-4 my-4 rounded-xl">
-      <SidebarHeader className="h-16 border-b border-sidebar-border/50 flex items-center justify-center pt-4 pb-2">
-        <div className="flex items-center gap-2 overflow-hidden w-full px-2">
-          <div className={`flex items-center justify-center w-full transition-all duration-300 ${state === 'collapsed' ? 'scale-75' : ''}`}>
+    <Sidebar collapsible="icon" side="right" variant="sidebar" className="border-l-0 border-t-0 border-r-0 bg-[#2C3E50] text-white overflow-hidden">
+      <SidebarHeader className="h-32 flex flex-col items-center justify-center p-0 mb-4 border-b border-white/5 pt-6">
+        <div className="flex flex-col items-center justify-center w-full h-full py-4 gap-3">
+          <div className={`transition-all duration-300 ${state === 'collapsed' ? 'hidden' : 'flex flex-col items-center justify-center'}`}>
             <img
               src={logoImage}
               alt="Logo"
-              className={`object-contain transition-all duration-300 ${state === 'collapsed' ? 'w-10 h-10' : 'w-32 h-auto'}`}
+              className="w-[120px] object-contain mb-4"
             />
+            <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer group backdrop-blur-sm shadow-sm hover:shadow-md">
+              <FontAwesomeIcon icon={faChevronRight} className="text-slate-400 text-[10px]" />
+              <span className="text-sm font-bold text-slate-100 tracking-wide font-['Cairo']">مدرسة النموذجية الثانوية</span>
+            </div>
           </div>
+          {state === 'collapsed' && (
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#3498DB] to-[#2980B9] flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer border border-white/10">
+              <span className="text-white text-2xl font-extrabold font-['Cairo'] select-none">م</span>
+            </div>
+          )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="p-2">
-        <SidebarMenu className="gap-2">
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton
-                isActive={currentScreen === item.id}
-                onClick={() => setCurrentScreen(item.id)}
-                tooltip={item.label}
-                size="lg"
-                className="font-medium"
-              >
-                <FontAwesomeIcon icon={item.icon} className="w-5 h-5" />
-                <span>{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+      <SidebarContent className="px-2 pb-2 overflow-y-hidden flex flex-col items-center">
+        {/* Navigation Group 1 */}
+        <div className={`w-full transition-opacity duration-300 ${state === 'collapsed' ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
+          <div className="mt-2 mb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+            الرئيسية
+          </div>
+        </div>
+        <SidebarMenu className={`gap-1 mb-4 ${state === 'collapsed' ? 'w-full flex flex-col items-center' : ''}`}>
+          {items.slice(0, 1).map((item) => {
+            const isActive = currentScreen === item.component;
+
+            return (
+              <SidebarMenuItem key={item.title} className={state === 'collapsed' ? 'w-auto' : 'w-full'}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  onClick={() => setCurrentScreen(item.component)}
+                  tooltip={item.title}
+                  size="lg"
+                  className={`relative flex items-center ${state === 'collapsed' ? 'justify-center w-12 h-12' : 'justify-start h-10'} rounded-xl transition-all duration-300 ${isActive
+                    ? state === 'collapsed'
+                      ? "bg-gradient-to-br from-[#3498DB] to-[#2980B9] text-white shadow-lg shadow-[#3498DB]/30"
+                      : "bg-[#3498DB]/10 text-[#3498DB] shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}
+                >
+                  <div className={`flex items-center justify-center ${state === 'collapsed' ? '' : 'min-w-[40px] h-full'} ${isActive && !state ? 'text-[#3498DB]' : state === 'collapsed' && isActive ? 'text-white' : 'text-slate-400'}`}>
+                    <FontAwesomeIcon icon={item.icon} className={state === 'collapsed' ? 'text-xl' : 'text-lg'} />
+                  </div>
+                  {state !== 'collapsed' && (
+                    <>
+                      <span className="font-bold text-sm transition-all duration-300 opacity-100">
+                        {item.title}
+                      </span>
+                      {isActive && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#3498DB] rounded-l-full shadow-[0_0_15px_rgba(52,152,219,0.5)]" />
+                      )}
+                    </>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+
+        {/* Navigation Group 2 */}
+        <div className={`w-full transition-opacity duration-300 ${state === 'collapsed' ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'}`}>
+          <div className="mt-2 mb-2 px-4 text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+            إدارة المدرسة
+          </div>
+        </div>
+        <SidebarMenu className={`gap-1 ${state === 'collapsed' ? 'w-full flex flex-col items-center' : ''}`}>
+          {items.slice(1).map((item) => {
+            const isActive = currentScreen === item.component;
+            return (
+              <SidebarMenuItem key={item.title} className={state === 'collapsed' ? 'w-auto' : 'w-full'}>
+                <SidebarMenuButton
+                  isActive={isActive}
+                  onClick={() => setCurrentScreen(item.component)}
+                  tooltip={item.title}
+                  size="lg"
+                  className={`relative flex items-center ${state === 'collapsed' ? 'justify-center w-12 h-12' : 'justify-start h-10'} rounded-xl transition-all duration-300 ${isActive
+                    ? state === 'collapsed'
+                      ? "bg-gradient-to-br from-[#3498DB] to-[#2980B9] text-white shadow-lg shadow-[#3498DB]/30"
+                      : "bg-[#3498DB]/10 text-[#3498DB] shadow-sm"
+                    : "text-slate-400 hover:text-white hover:bg-white/5"
+                    }`}
+                >
+                  <div className={`flex items-center justify-center ${state === 'collapsed' ? '' : 'min-w-[40px] h-full'} ${isActive && !state ? 'text-[#3498DB]' : state === 'collapsed' && isActive ? 'text-white' : 'text-slate-400'}`}>
+                    <FontAwesomeIcon icon={item.icon} className={state === 'collapsed' ? 'text-xl' : 'text-lg'} />
+                  </div>
+                  {state !== 'collapsed' && (
+                    <>
+                      <span className="font-bold text-sm transition-all duration-300 opacity-100">
+                        {item.title}
+                      </span>
+                      {isActive && (
+                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#3498DB] rounded-l-full shadow-[0_0_15px_rgba(52,152,219,0.5)]" />
+                      )}
+                    </>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-sidebar-border/50">
-        <SidebarMenu>
-          <SidebarMenuItem>
+      <SidebarFooter className="p-2 bg-[#0f172a] border-t border-white/5">
+        <SidebarMenu className={`gap-1 ${state === 'collapsed' ? 'flex flex-col items-center' : ''}`}>
+          <SidebarMenuItem className={state === 'collapsed' ? 'w-auto' : 'w-full'}>
             <SidebarMenuButton
               onClick={handleSync}
               size="lg"
-              className="text-[#2ECC71] hover:text-[#27AE60] hover:bg-[#2ECC71]/10"
+              className={`${state === 'collapsed' ? 'w-12 h-12 justify-center' : 'h-9'} rounded-xl text-[#2ECC71] hover:text-[#27AE60] hover:bg-[#2ECC71]/10 transition-all`}
               tooltip="مزامنة البيانات"
             >
-              <FontAwesomeIcon icon={faSync} className="w-5 h-5" />
-              <span>مزامنة البيانات</span>
+              <div className={`flex items-center justify-center ${state === 'collapsed' ? '' : 'min-w-[40px]'}`}>
+                <FontAwesomeIcon icon={faSync} className={state === 'collapsed' ? 'text-xl' : 'text-base'} />
+              </div>
+              {state !== 'collapsed' && (
+                <span className="font-bold text-sm">مزامنة البيانات</span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
+          <SidebarMenuItem className={state === 'collapsed' ? 'w-auto' : 'w-full'}>
             <SidebarMenuButton
               onClick={handleLogout}
               size="lg"
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-              tooltip="تسجيل الخروج"
+              className={`${state === 'collapsed' ? 'w-12 h-12 justify-center' : 'h-9'} rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all`}
+              tooltip="خروج من النظام"
             >
-              <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
-              <span>تسجيل الخروج</span>
+              <div className={`flex items-center justify-center ${state === 'collapsed' ? '' : 'min-w-[40px]'}`}>
+                <FontAwesomeIcon icon={faSignOutAlt} className={state === 'collapsed' ? 'text-xl' : 'text-base'} />
+              </div>
+              {state !== 'collapsed' && (
+                <span className="font-bold text-sm">تسجيل الخروج</span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -196,7 +290,7 @@ export default function App() {
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "16rem",
+          "--sidebar-width": "250px",
           "--sidebar-width-mobile": "18rem",
         } as React.CSSProperties
       }
@@ -219,7 +313,7 @@ export default function App() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink href="#">
-                    أجيال برو
+                    مدرسة النموذجية الثانوية
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
@@ -229,17 +323,19 @@ export default function App() {
               </BreadcrumbList>
             </Breadcrumb>
 
-            <div className="mr-auto flex items-center gap-4">
-              <CommandPalette />
-              <ThemeToggle />
+            <div className="mr-auto flex items-center gap-6">
+              <div className="text-left hidden lg:flex flex-col items-start border-l border-gray-200 pl-4">
+                <p className="text-sm font-bold text-[#2C3E50]">الأثنين، 19 يناير 2026</p>
+                <p className="text-xs text-muted-foreground font-semibold">الفصل الدراسي الثاني</p>
+              </div>
 
               <button className="p-2 hover:bg-muted rounded-lg transition-colors relative">
                 <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-muted-foreground" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               <div className="text-right hidden md:block">
-                <p className="text-xs text-muted-foreground">مرحباً،</p>
-                <p className="text-sm font-bold text-foreground">أستاذ محمد أحمد</p>
+                <p className="text-xs text-muted-foreground font-semibold">مرحباً،</p>
+                <p className="text-sm font-bold text-[#2C3E50]">أستاذ محمد أحمد</p>
               </div>
             </div>
           </div>
@@ -263,6 +359,6 @@ export default function App() {
           isComplete={isSyncComplete}
         />
       </SidebarInset>
-    </SidebarProvider>
+    </SidebarProvider >
   );
 }

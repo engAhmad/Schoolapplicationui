@@ -1,17 +1,10 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faSearch,
   faPlus,
-  faEdit,
-  faTrash,
-  faEllipsisV,
-  faFileExport,
-  faFilter,
-  faChartLine,
 } from "@fortawesome/free-solid-svg-icons";
 import { Button } from "@/app/components/ui/button";
-import { Input } from "@/app/components/ui/input";
+import { DataTable, Column } from "@/app/components/ui/data-table";
 
 interface Student {
   id: number;
@@ -31,15 +24,72 @@ const mockStudents: Student[] = [
   { id: 6, name: "عمر إبراهيم", class: "الصف الثالث ج", attendance: 85, grade: "B", status: "active" },
   { id: 7, name: "ليلى عبدالله", class: "الصف الثالث أ", attendance: 91, grade: "A-", status: "active" },
   { id: 8, name: "خالد أحمد", class: "الصف الثالث ب", attendance: 87, grade: "B+", status: "active" },
+  { id: 9, name: "يوسف محمد", class: "الصف الثالث ج", attendance: 76, grade: "C+", status: "inactive" },
+  { id: 10, name: "هدى سالم", class: "الصف الثالث أ", attendance: 99, grade: "A+", status: "active" },
+  { id: 11, name: "زينب علي", class: "الصف الثالث ب", attendance: 82, grade: "B-", status: "active" },
+  { id: 12, name: "كريم وايل", class: "الصف الثالث ج", attendance: 65, grade: "D", status: "active" },
 ];
 
 export function StudentManagement() {
-  const [searchQuery, setSearchQuery] = useState("");
   const [students] = useState<Student[]>(mockStudents);
 
-  const filteredStudents = students.filter((student) =>
-    student.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const columns: Column<Student>[] = [
+    { key: "id", title: "الرقم", sortable: true },
+    { key: "name", title: "اسم الطالب", sortable: true, render: (s) => <span className="font-semibold text-[#2C3E50]">{s.name}</span> },
+    { key: "class", title: "الصف", sortable: true },
+    {
+      key: "attendance",
+      title: "نسبة الحضور",
+      sortable: true,
+      render: (s) => (
+        <div className="flex items-center gap-2">
+          <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full ${s.attendance >= 90 ? "bg-[#2ECC71]" : s.attendance >= 75 ? "bg-[#F1C40F]" : "bg-[#E74C3C]"}`}
+              style={{ width: `${s.attendance}%` }}
+            />
+          </div>
+          <span className="text-sm font-semibold">{s.attendance}%</span>
+        </div>
+      ),
+    },
+    {
+      key: "grade",
+      title: "التقدير",
+      sortable: true,
+      render: (s) => (
+        <span
+          className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${s.grade.startsWith("A")
+            ? "bg-[#2ECC71] text-white"
+            : s.grade.startsWith("B")
+              ? "bg-[#3498DB] text-white"
+              : s.grade.startsWith("C")
+                ? "bg-[#F1C40F] text-white"
+                : s.grade.startsWith("D")
+                  ? "bg-[#E67E22] text-white"
+                  : "bg-[#E74C3C] text-white"
+            }`}
+        >
+          {s.grade}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      title: "الحالة",
+      sortable: true,
+      render: (s) => (
+        <span
+          className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${s.status === "active"
+            ? "bg-green-100 text-green-700"
+            : "bg-red-100 text-red-700"
+            }`}
+        >
+          {s.status === "active" ? "نشط" : "غير نشط"}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="p-6" style={{ fontFamily: "Cairo, sans-serif" }}>
@@ -58,121 +108,17 @@ export function StudentManagement() {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-6 relative">
-        <FontAwesomeIcon
-          icon={faSearch}
-          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5"
+      {/* Data Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-1">
+        <DataTable
+          data={students}
+          columns={columns}
+          searchKey="name"
+          pageSize={8}
+          enableSelection={true}
+          onSelectionChange={(selected) => console.log('Selected:', selected)}
+          className="p-4"
         />
-        <Input
-          type="text"
-          placeholder="البحث عن طالب..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pr-12 h-12 rounded-xl border-gray-300 focus:border-[#3498DB] focus:ring-[#3498DB]"
-          style={{ fontFamily: "Cairo, sans-serif", textAlign: "right" }}
-        />
-      </div>
-
-      {/* Students Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full" dir="rtl">
-            <thead className="bg-[#2C3E50] text-white">
-              <tr>
-                <th className="py-4 px-6 text-right font-semibold">الرقم</th>
-                <th className="py-4 px-6 text-right font-semibold">اسم الطالب</th>
-                <th className="py-4 px-6 text-right font-semibold">الصف</th>
-                <th className="py-4 px-6 text-center font-semibold">نسبة الحضور</th>
-                <th className="py-4 px-6 text-center font-semibold">التقدير</th>
-                <th className="py-4 px-6 text-center font-semibold">الحالة</th>
-                <th className="py-4 px-6 text-center font-semibold">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStudents.map((student, index) => (
-                <tr
-                  key={student.id}
-                  className={`border-b border-gray-100 hover:bg-[#E8EAED] transition-colors ${
-                    index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  }`}
-                >
-                  <td className="py-4 px-6 text-gray-600">{student.id}</td>
-                  <td className="py-4 px-6 text-[#2C3E50] font-semibold">{student.name}</td>
-                  <td className="py-4 px-6 text-gray-600">{student.class}</td>
-                  <td className="py-4 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-12 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-[#2ECC71] rounded-full"
-                          style={{ width: `${student.attendance}%` }}
-                        />
-                      </div>
-                      <span className="text-sm font-semibold text-gray-700">{student.attendance}%</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${
-                        student.grade.startsWith("A")
-                          ? "bg-[#2ECC71] text-white"
-                          : student.grade.startsWith("B")
-                          ? "bg-[#3498DB] text-white"
-                          : "bg-gray-400 text-white"
-                      }`}
-                    >
-                      {student.grade}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-lg text-sm font-semibold ${
-                        student.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {student.status === "active" ? "نشط" : "غير نشط"}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-center gap-2">
-                      <button className="p-2 hover:bg-[#3498DB] hover:text-white rounded-lg transition-colors text-gray-600">
-                        <FontAwesomeIcon icon={faEdit} className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 hover:bg-red-500 hover:text-white rounded-lg transition-colors text-gray-600">
-                        <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-600">
-                        <FontAwesomeIcon icon={faEllipsisV} className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-sm text-gray-600">عرض 1-8 من 89 طالب</p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="rounded-lg"
-              style={{ fontFamily: "Cairo, sans-serif" }}
-            >
-              السابق
-            </Button>
-            <Button
-              className="bg-[#3498DB] hover:bg-[#2980B9] text-white rounded-lg"
-              style={{ fontFamily: "Cairo, sans-serif" }}
-            >
-              التالي
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   );
