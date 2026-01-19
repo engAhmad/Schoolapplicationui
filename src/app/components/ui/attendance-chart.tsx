@@ -1,7 +1,7 @@
 "use client"
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, TooltipProps } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "./card"
 
 const data = [
     { name: "الأحد", total: 85 },
@@ -33,7 +33,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 
 export function AttendanceChart() {
     return (
-        <Card className="col-span-1 md:col-span-2">
+        <Card className="col-span-1">
             <CardHeader>
                 <CardTitle className="text-lg font-bold text-[#2C3E50]" style={{ fontFamily: "Cairo, sans-serif" }}>
                     إحصائيات الحضور الأسبوعي

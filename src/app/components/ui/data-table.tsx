@@ -30,20 +30,22 @@ import {
     PaginationPrevious,
 } from "@/app/components/ui/pagination";
 
-interface Column<T> {
+export interface Column<T> {
     key: keyof T;
     title: string;
     sortable?: boolean;
     render?: (item: T) => React.ReactNode;
 }
 
-interface DataTableProps<T> {
+export interface DataTableProps<T> {
     data: T[];
     columns: Column<T>[];
     searchKey?: keyof T;
     pageSize?: number;
     className?: string;
     onRowClick?: (item: T) => void;
+    enableSelection?: boolean;
+    onSelectionChange?: (selectedItems: T[]) => void;
 }
 
 export function DataTable<T extends { id?: string | number }>({
@@ -53,13 +55,24 @@ export function DataTable<T extends { id?: string | number }>({
     pageSize = 10,
     className,
     onRowClick,
+    enableSelection = false,
+    onSelectionChange,
 }: DataTableProps<T>) {
     const [currentPage, setCurrentPage] = React.useState(1);
     const [searchTerm, setSearchTerm] = React.useState("");
+    const [selectedRows, setSelectedRows] = React.useState<Set<string | number>>(new Set());
     const [sortConfig, setSortConfig] = React.useState<{
         key: keyof T;
         direction: "asc" | "desc";
     } | null>(null);
+
+    // Initial Selection Sync
+    React.useEffect(() => {
+        if (onSelectionChange) {
+            const selectedItems = data.filter(item => item.id && selectedRows.has(item.id));
+            onSelectionChange(selectedItems);
+        }
+    }, [selectedRows, data, onSelectionChange]);
 
     // Filter
     const filteredData = React.useMemo(() => {
@@ -99,19 +112,46 @@ export function DataTable<T extends { id?: string | number }>({
         setSortConfig({ key, direction });
     };
 
+    const toggleAll = (checked: boolean) => {
+        if (checked) {
+            const newSelected = new Set(currentData.map(item => item.id!).filter(Boolean));
+            setSelectedRows(newSelected);
+        } else {
+            setSelectedRows(new Set());
+        }
+    };
+
+    const toggleRow = (id: string | number) => {
+        const newSelected = new Set(selectedRows);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedRows(newSelected);
+    };
+
     return (
         <div className={cn("space-y-4", className)} dir="rtl">
             {searchKey && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between gap-4">
                     <div className="relative max-w-sm w-full">
                         <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             placeholder="بحث..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1); // Reset to first page on search
+                            }}
                             className="pr-9"
                         />
                     </div>
+                    {enableSelection && selectedRows.size > 0 && (
+                        <div className="text-sm text-muted-foreground">
+                            تم تحديد {selectedRows.size} عنصر
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -119,8 +159,18 @@ export function DataTable<T extends { id?: string | number }>({
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            {enableSelection && (
+                                <TableHead className="w-[40px] text-right">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-gray-300"
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => toggleAll(e.target.checked)}
+                                        checked={currentData.length > 0 && currentData.every(item => item.id && selectedRows.has(item.id))}
+                                    />
+                                </TableHead>
+                            )}
                             {columns.map((column) => (
-                                <TableHead key={String(column.key)}>
+                                <TableHead key={String(column.key)} className="text-right">
                                     {column.sortable ? (
                                         <Button
                                             variant="ghost"
@@ -151,9 +201,20 @@ export function DataTable<T extends { id?: string | number }>({
                             currentData.map((item, i) => (
                                 <TableRow
                                     key={item.id || i}
-                                    className={cn("cursor-pointer", onRowClick && "hover:bg-muted/50")}
+                                    className={cn("cursor-pointer", onRowClick && "hover:bg-muted/50", item.id && selectedRows.has(item.id) && "bg-muted/50")}
                                     onClick={() => onRowClick?.(item)}
                                 >
+                                    {enableSelection && (
+                                        <TableCell className="text-right">
+                                            <input
+                                                type="checkbox"
+                                                className="rounded border-gray-300"
+                                                checked={!!item.id && selectedRows.has(item.id)}
+                                                onChange={() => item.id && toggleRow(item.id)}
+                                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                            />
+                                        </TableCell>
+                                    )}
                                     {columns.map((column) => (
                                         <TableCell key={String(column.key)}>
                                             {column.render ? column.render(item) : (item[column.key] as React.ReactNode)}
@@ -168,8 +229,9 @@ export function DataTable<T extends { id?: string | number }>({
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>View details</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>عرض التفاصيل</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>تعديل</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>حذف</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
@@ -178,7 +240,7 @@ export function DataTable<T extends { id?: string | number }>({
                         ) : (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length + 1}
+                                    colSpan={columns.length + (enableSelection ? 2 : 1)}
                                     className="h-24 text-center"
                                 >
                                     No results.

@@ -2,6 +2,15 @@
 @import './tailwind.css';
 @import './theme.css';
 
+/* Brand Kit Colors */
+:root {
+    --brand-dark-navy: #2C3E50;
+    --brand-sky-blue: #3498DB;
+    --brand-emerald-green: #2ECC71;
+    --brand-accent-yellow: #F9AB00;
+    --brand-light-gray: #E8EAED;
+}
+
 @layer utilities {
     .animate-in {
         animation: animate-in 0.3s ease-out;

@@ -31,7 +31,7 @@ export function SyncOverlay({ isVisible, status, progress, isComplete }: SyncOve
                 <CheckCircle2 className="w-10 h-10 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-[#2C3E50] mb-2">تمت المزامنة بنجاح</h3>
-              <p className="text-gray-600">تم تحديث جميع البيانات من بوابة أجيال</p>
+              <p className="text-gray-600">تم تحديث جميع البيانات من بوابة المدرسة</p>
             </div>
           ) : (
             <>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "./card"
 
 const data = [
     { name: "ممتاز (A)", value: 35, color: "#2ECC71" }, // Green
