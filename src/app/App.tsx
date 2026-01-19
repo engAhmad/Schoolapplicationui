@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHouse,
   faUserGraduate,
@@ -10,6 +9,7 @@ import {
   faSync,
   faBell,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Dashboard } from "@/app/components/Dashboard";
 import { StudentManagement } from "@/app/components/StudentManagement";
 import { AttendanceManagement } from "@/app/components/AttendanceManagement";
@@ -17,17 +17,47 @@ import { ScheduleManagement } from "@/app/components/ScheduleManagement";
 import { SettingsManagement } from "@/app/components/SettingsManagement";
 import { Login } from "@/app/components/Login";
 import { SyncOverlay } from "@/app/components/SyncOverlay";
+import logoImage from "@/assets/sidebar-logo.png";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from "@/app/components/ui/sidebar";
+import { Separator } from "@/app/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/app/components/ui/breadcrumb";
+import { ThemeToggle } from "@/app/components/ui/theme-toggle";
+import { CommandPalette } from "@/app/components/ui/command-palette";
 
 type Screen = "dashboard" | "students" | "attendance" | "schedule" | "settings";
 
-export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState(0);
-  const [syncStatus, setSyncStatus] = useState("");
-  const [isSyncComplete, setIsSyncComplete] = useState(false);
+function AppSidebar({
+  currentScreen,
+  setCurrentScreen,
+  handleSync,
+  handleLogout,
+}: {
+  currentScreen: Screen;
+  setCurrentScreen: (screen: Screen) => void;
+  handleSync: () => void;
+  handleLogout: () => void;
+}) {
+  const { state } = useSidebar();
 
   const menuItems = [
     { id: "dashboard" as Screen, label: "لوحة التحكم", icon: faHouse },
@@ -36,6 +66,78 @@ export default function App() {
     { id: "schedule" as Screen, label: "الجدول", icon: faCalendarDays },
     { id: "settings" as Screen, label: "الإعدادات", icon: faGear },
   ];
+
+  return (
+    <Sidebar collapsible="icon" side="right" variant="sidebar" className="glass-panel border-l-0 ml-4 my-4 rounded-xl">
+      <SidebarHeader className="h-16 border-b border-sidebar-border/50 flex items-center justify-center pt-4 pb-2">
+        <div className="flex items-center gap-2 overflow-hidden w-full px-2">
+          <div className={`flex items-center justify-center w-full transition-all duration-300 ${state === 'collapsed' ? 'scale-75' : ''}`}>
+            <img
+              src={logoImage}
+              alt="Logo"
+              className={`object-contain transition-all duration-300 ${state === 'collapsed' ? 'w-10 h-10' : 'w-32 h-auto'}`}
+            />
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="p-2">
+        <SidebarMenu className="gap-2">
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.id}>
+              <SidebarMenuButton
+                isActive={currentScreen === item.id}
+                onClick={() => setCurrentScreen(item.id)}
+                tooltip={item.label}
+                size="lg"
+                className="font-medium"
+              >
+                <FontAwesomeIcon icon={item.icon} className="w-5 h-5" />
+                <span>{item.label}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+
+      <SidebarFooter className="p-2 border-t border-sidebar-border/50">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleSync}
+              size="lg"
+              className="text-[#2ECC71] hover:text-[#27AE60] hover:bg-[#2ECC71]/10"
+              tooltip="مزامنة البيانات"
+            >
+              <FontAwesomeIcon icon={faSync} className="w-5 h-5" />
+              <span>مزامنة البيانات</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              size="lg"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+              tooltip="تسجيل الخروج"
+            >
+              <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />
+              <span>تسجيل الخروج</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+
+export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<Screen>("dashboard");
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(0);
+  const [syncStatus, setSyncStatus] = useState("");
+  const [isSyncComplete, setIsSyncComplete] = useState(false);
 
   const handleSync = () => {
     setIsSyncing(true);
@@ -55,7 +157,7 @@ export default function App() {
           }, 2000);
           return 100;
         }
-        
+
         // Update status based on progress
         if (prev < 30) {
           setSyncStatus("جاري تحميل بيانات الطلاب...");
@@ -64,136 +166,103 @@ export default function App() {
         } else if (prev < 90) {
           setSyncStatus("جاري تحديث الدرجات والتقييمات...");
         }
-        
+
         return prev + 10;
       });
     }, 500);
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
+    return (
+      <Login
+        onLogin={() => setIsLoggedIn(true)}
+        onOffline={() => setIsLoggedIn(true)}
+      />
+    );
   }
 
+  const getPageTitle = () => {
+    switch (currentScreen) {
+      case "dashboard": return "لوحة التحكم";
+      case "students": return "الطلاب";
+      case "attendance": return "الحضور";
+      case "schedule": return "الجدول";
+      case "settings": return "الإعدادات";
+      default: return "";
+    }
+  };
+
   return (
-    <div
-      className="h-screen bg-[#E8EAED] flex"
-      style={{ fontFamily: "Cairo, sans-serif" }}
+    <SidebarProvider
+      style={
+        {
+          "--sidebar-width": "16rem",
+          "--sidebar-width-mobile": "18rem",
+        } as React.CSSProperties
+      }
       dir="rtl"
     >
-      {/* Sidebar - Fixed on the RIGHT side */}
-      <aside
-        className={`bg-[#2C3E50] text-white transition-all duration-300 flex-shrink-0 ${
-          isSidebarCollapsed ? "w-20" : "w-64"
-        }`}
-      >
-        <div className="h-full flex flex-col">
-          {/* Logo/Header */}
-          <div className="p-6 border-b border-[#34495e]">
-            <div className="flex items-center justify-between">
-              {!isSidebarCollapsed && (
-                <div>
-                  <h2 className="text-xl font-bold">أجيال برو</h2>
-                  <p className="text-xs text-gray-400 mt-1">إدارة المدارس</p>
-                </div>
-              )}
-              <button
-                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                className="p-2 hover:bg-[#34495e] rounded-lg transition-colors"
-              >
-                {isSidebarCollapsed ? <FontAwesomeIcon icon={faHouse} className="w-5 h-5" /> : <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5" />}
+      <AppSidebar
+        currentScreen={currentScreen}
+        setCurrentScreen={setCurrentScreen}
+        handleSync={handleSync}
+        handleLogout={() => setIsLoggedIn(false)}
+      />
+
+      <SidebarInset className="overflow-hidden flex flex-col h-full">
+        {/* Top Header */}
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4 shadow-sm transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-16">
+          <div className="flex items-center gap-2 px-4 w-full">
+            <SidebarTrigger className="-mr-1 ml-2" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    أجيال برو
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{getPageTitle()}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+
+            <div className="mr-auto flex items-center gap-4">
+              <CommandPalette />
+              <ThemeToggle />
+
+              <button className="p-2 hover:bg-muted rounded-lg transition-colors relative">
+                <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-muted-foreground" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
+              <div className="text-right hidden md:block">
+                <p className="text-xs text-muted-foreground">مرحباً،</p>
+                <p className="text-sm font-bold text-foreground">أستاذ محمد أحمد</p>
+              </div>
             </div>
-          </div>
-
-          {/* Menu Items */}
-          <nav className="flex-1 p-4 space-y-2">
-            {menuItems.map((item) => {
-              const isActive = currentScreen === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setCurrentScreen(item.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-[8px] transition-all ${
-                    isActive
-                      ? "bg-[#3498DB] text-white"
-                      : "hover:bg-[#34495e] text-gray-300"
-                  } ${isSidebarCollapsed ? "justify-center" : ""}`}
-                  style={isActive ? { opacity: 1 } : {}}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "rgba(52, 152, 219, 0.1)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "";
-                  }}
-                >
-                  <FontAwesomeIcon icon={item.icon} style={{ fontSize: "11pt" }} className="flex-shrink-0" />
-                  {!isSidebarCollapsed && <span style={{ fontSize: "11pt", fontWeight: 700 }}>{item.label}</span>}
-                </button>
-              );
-            })}
-          </nav>
-
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-[#34495e] space-y-2">
-            <button
-              onClick={handleSync}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all bg-[#2ECC71] hover:bg-[#27AE60] text-white ${
-                isSidebarCollapsed ? "justify-center" : ""
-              }`}
-            >
-              <FontAwesomeIcon icon={faSync} className="w-5 h-5 flex-shrink-0" />
-              {!isSidebarCollapsed && <span className="font-medium">مزامنة البيانات</span>}
-            </button>
-            <button
-              onClick={() => setIsLoggedIn(false)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-red-600 text-gray-300 ${
-                isSidebarCollapsed ? "justify-center" : ""
-              }`}
-            >
-              <FontAwesomeIcon icon={faRightFromBracket} className="w-5 h-5 flex-shrink-0" />
-              {!isSidebarCollapsed && <span className="font-medium">تسجيل الخروج</span>}
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-              <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="text-right">
-              <p style={{ fontSize: "11pt" }} className="text-gray-600">مرحباً،</p>
-              <p style={{ fontSize: "14pt", fontWeight: 700 }} className="text-[#2C3E50]">أستاذ محمد أحمد</p>
-            </div>
-          </div>
-          <div className="text-left">
-            <p style={{ fontSize: "11pt" }} className="text-gray-600">الأحد، 18 يناير 2026</p>
-            <p style={{ fontSize: "10pt" }} className="text-gray-500">الفصل الدراسي الثاني</p>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto">
-          {currentScreen === "dashboard" && <Dashboard />}
-          {currentScreen === "students" && <StudentManagement />}
-          {currentScreen === "attendance" && <AttendanceManagement />}
-          {currentScreen === "schedule" && <ScheduleManagement />}
-          {currentScreen === "settings" && <SettingsManagement />}
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-auto p-6">
+          <div className="mx-auto max-w-7xl w-full">
+            {currentScreen === "dashboard" && <Dashboard />}
+            {currentScreen === "students" && <StudentManagement />}
+            {currentScreen === "attendance" && <AttendanceManagement />}
+            {currentScreen === "schedule" && <ScheduleManagement />}
+            {currentScreen === "settings" && <SettingsManagement />}
+          </div>
         </main>
-      </div>
 
-      {/* Sync Overlay */}
-      <SyncOverlay
-        isVisible={isSyncing}
-        status={syncStatus}
-        progress={syncProgress}
-        isComplete={isSyncComplete}
-      />
-    </div>
+        <SyncOverlay
+          isVisible={isSyncing}
+          status={syncStatus}
+          progress={syncProgress}
+          isComplete={isSyncComplete}
+        />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
