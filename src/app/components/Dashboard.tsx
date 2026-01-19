@@ -8,6 +8,8 @@ import {
   faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 import { StatTile } from "@/app/components/StatTile";
+import { AttendanceChart } from "@/app/components/ui/attendance-chart";
+import { GradeDistributionChart } from "@/app/components/ui/grade-chart";
 
 export function Dashboard() {
   return (
@@ -63,6 +65,11 @@ export function Dashboard() {
         />
       </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <AttendanceChart />
+        <GradeDistributionChart />
+      </div>
+
       {/* Recent Activity */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-bold text-[#2C3E50] mb-4">النشاطات الأخيرة</h2>
@@ -75,13 +82,12 @@ export function Dashboard() {
           ].map((activity, index) => (
             <div key={index} className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0">
               <div
-                className={`w-2 h-2 rounded-full ${
-                  activity.color === "green"
-                    ? "bg-[#2ECC71]"
-                    : activity.color === "blue"
+                className={`w-2 h-2 rounded-full ${activity.color === "green"
+                  ? "bg-[#2ECC71]"
+                  : activity.color === "blue"
                     ? "bg-[#3498DB]"
                     : "bg-[#2C3E50]"
-                }`}
+                  }`}
               />
               <div className="flex-1">
                 <p className="text-[#2C3E50] text-sm">{activity.text}</p>
